@@ -14,7 +14,23 @@ P = np.array([[+2.00, +0.00, +1.00],
               [+0.57, -1.91, +4.32]], dtype=float)
 
 # Question 1. Plot the trajectory through these data points with your tool of choice.
-#TODO Insert the code we used for plotting
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+x = [2, 1.08, -0.83, -1.97, -1.31, 0.57]
+y = [0, 1.68, 1.82, 0.28, -1.51, -1.91]
+z = [1, 2.38, 2.49, 2.15, 2.59, 4.32]
+
+fig = plt.figure()
+ax = plt.axes(projection = '3d')
+ax.plot(x, y, z)
+
+ax.set_xlabel('X Axis')
+ax.set_ylabel('Y Axis')
+ax.set_zlabel('Z Axis')
+ax.set_title('Trajectory Quadrocopter')
+
+plt.show()
 
 # Question 2. Linear Regression Exercises
 
