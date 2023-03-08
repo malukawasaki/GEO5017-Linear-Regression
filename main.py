@@ -42,6 +42,9 @@ mpl.rcParams['axes3d.xaxis.panecolor'] = "#FFFFFF"
 mpl.rcParams['axes3d.yaxis.panecolor'] = "#FFFFFF"
 mpl.rcParams['axes3d.zaxis.panecolor'] = "#FFFFFF"
 
+# If running into problems using matplotlib latex just uncomment this line:
+# mpl.rcParams.update(mpl.rcParamsDefault)
+
 
 def build_independent_variable_matrix(dependent_variable_matrix: np.ndarray, model_order: int) -> np.ndarray:
     """
@@ -76,14 +79,14 @@ def build_model_weights(dependent_variable_matrix: np.ndarray, model_order: int)
 
 def make_plot(filename: str, dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray) -> None:
     """
-    TODO
-    '
+    Creates a plot of the data represented by the dependent and independent variable matrices and save it to a file with the given filename.
+
     :param filename:
         The output file path.
     :param dependent_variable_matrix:
         The dependent variable matrix of the regression model (i.e., position).
     :param independent_variable_matrix:
-        The dependent variable matrix of the regression model (i.e., time).
+        The independent variable matrix of the regression model (i.e., time).
     """
     # Visualize the observed trajectory of the quadcopter over time.
     ax = plt.figure().add_subplot(projection='3d')
@@ -143,7 +146,7 @@ def objective(dependent_variable_matrix: np.ndarray, independent_variable_matrix
     :param dependent_variable_matrix:
         The dependent variable matrix of the regression model (i.e., position).
     :param independent_variable_matrix:
-        The dependent variable matrix of the regression model (i.e., time).
+        The independent variable matrix of the regression model (i.e., time).
     :param model_weights:
         The weight matrix of the regression model.
     :return:
@@ -159,9 +162,9 @@ def objective_gradient(dependent_variable_matrix: np.ndarray, independent_variab
     Evaluates the gradient of the objective function of the underlying optimization problem.
 
     :param dependent_variable_matrix:
-        The observations.
+        The dependent variable matrix. (i.e., the observations)
     :param independent_variable_matrix:
-        The dependent variable matrix of the regression model (i.e., time).
+        The independent variable matrix of the regression model (i.e., time).
     :param model_weights:
         The model weight matrix of the regression model.
     :return:
@@ -173,15 +176,22 @@ def objective_gradient(dependent_variable_matrix: np.ndarray, independent_variab
 def gradient_descent(gradient, dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray,
                      model_weights: np.ndarray, learning_rate=1e-5, max_num_iterations=1e+10, step_eps=1e-15) -> None:
     """
-    TODO
+    Implementation of the gradient descent algorithm.
 
     :param gradient:
+        Function that returns the gradient of the objective function with respect to the model weights.
     :param dependent_variable_matrix:
+        The dependent variable matrix. (i.e., the observations)
     :param independent_variable_matrix:
+        The independent variable matrix (i.e., time)
     :param model_weights:
+        The weight matrix of the regression model.
     :param learning_rate:
+        The step size of each update in the gradient descent algorithm.
     :param max_num_iterations:
+        The maximum number of iterations or updates allowed in the gradient descent algorithm.
     :param step_eps:
+        The minimum value of the absolute step in the gradient descent algorithm.
     """
     for _ in range(int(max_num_iterations)):
         step = learning_rate * gradient(dependent_variable_matrix, independent_variable_matrix, model_weights)
@@ -202,8 +212,8 @@ W1 = build_model_weights(X, 1)
 make_plot("observedQuadcopterTrajectory", X, build_independent_variable_matrix(X, 1))
 
 gradient_descent(objective_gradient, X, T1, W1)
-print("Optimal Model Weights:\n", W1)
-print("Residual Error:\n", objective(X, T1, W1))
+print("Optimal Model Weights for Linear Model:\n", W1)
+print("Residual Error for Linear Model:\n", objective(X, T1, W1))
 
 print('Speed:\n', np.linalg.norm(W1[0, :]))
 
@@ -212,8 +222,8 @@ T2 = build_independent_variable_matrix(X, 2)
 W2 = build_model_weights(X, 2)
 
 gradient_descent(objective_gradient, X, T2, W2)
-print("Optimal Model Weights:\n", W2)
-print("Residual Error:\n", objective(X, T2, W2))
+print("Optimal Model Weights for Square Model:\n", W2)
+print("Residual Error for Square Model:\n", objective(X, T2, W2))
 
 next_timestep = np.array([1, 7, 49])
 print('Next Position:\n', next_timestep @ W2)
