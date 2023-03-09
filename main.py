@@ -155,7 +155,7 @@ def objective(dependent_variable_matrix: np.ndarray, independent_variable_matrix
         dependent_variable_matrix:
             The dependent variable matrix of the regression model.
         independent_variable_matrix:
-            The dependent variable matrix of the regression model.
+            The independent variable matrix of the regression model.
         weight_matrix:
             The weight matrix of the regression model.
 
