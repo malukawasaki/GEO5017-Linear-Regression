@@ -42,6 +42,7 @@ mpl.rcParams['axes3d.xaxis.panecolor'] = "#FFFFFF"
 mpl.rcParams['axes3d.yaxis.panecolor'] = "#FFFFFF"
 mpl.rcParams['axes3d.zaxis.panecolor'] = "#FFFFFF"
 
+
 # If running into problems using matplotlib latex just uncomment this line:
 # mpl.rcParams.update(mpl.rcParamsDefault)
 
@@ -50,45 +51,50 @@ def build_independent_variable_matrix(dependent_variable_matrix: np.ndarray, mod
     """
     Constructs the independent variable matrix of the regression model based on its desired order.
 
-    :param dependent_variable_matrix:
-        The dependent variable matrix (i.e., position).
-    :param model_order:
-        The order of the model.
-    :return:
-        The independent variable matrix (i.e., time).
+    Args:
+        dependent_variable_matrix:
+            The dependent variable matrix of the model.
+        model_order:
+            The order of the model.
+
+    Returns:
+        The independent variable matrix of the model.
     """
     return np.array(
         [[x ** n for n in range(model_order + 1)] for x in range(1, len(dependent_variable_matrix) + 1)]).reshape(
-        len(X), -1)
+        len(dependent_variable_matrix), -1)
 
 
-def build_model_weights(dependent_variable_matrix: np.ndarray, model_order: int) -> np.ndarray:
+def build_weight_matrix(dependent_variable_matrix: np.ndarray, model_order: int) -> np.ndarray:
     """
-    Constructs an initial weight matrix of the regression model based on its desired order.
+    Constructs an initial, non-optimal weight matrix of the regression model based on its desired order.
 
-    :param dependent_variable_matrix:
-        The dependent variable matrix (i.e., position).
-    :param model_order:
-        The order of the model.
-    :return:
-        The weight matrix.
+    Args:
+        dependent_variable_matrix:
+            The dependent variable matrix of the model.
+        model_order:
+            The order of the model.
+
+    Returns:
+        The weight matrix of the model.
     """
     # The initialization values have been chosen arbitrarily.
     return np.ones((model_order + 1, dependent_variable_matrix.shape[1]))
 
 
-def make_plot(filename: str, dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray) -> None:
+def plot_model(filename: str, dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray) -> None:
     """
-    Creates a plot of the data represented by the dependent and independent variable matrices and save it to a file with the given filename.
+    Generates a plot of the regression model and saves the corresponding figure to disk.
 
-    :param filename:
-        The output file path.
-    :param dependent_variable_matrix:
-        The dependent variable matrix of the regression model (i.e., position).
-    :param independent_variable_matrix:
-        The independent variable matrix of the regression model (i.e., time).
+    Args:
+        filename:
+            The relative or absolute output file path.
+        dependent_variable_matrix:
+            The dependent variable matrix of the model.
+        independent_variable_matrix:
+            The independent variable matrix of the model.
     """
-    # Visualize the observed trajectory of the quadcopter over time.
+    # Visualize the observed trajectory of the quadrocopter over time.
     ax = plt.figure().add_subplot(projection='3d')
     # Set the camera a front isometric view.
     ax.view_init(elev=math.degrees(math.asin(1 / math.sqrt(3))), azim=-45)
@@ -105,7 +111,8 @@ def make_plot(filename: str, dependent_variable_matrix: np.ndarray, independent_
     ax.plot(dependent_variable_matrix[:, 0], dependent_variable_matrix[:, 1], c="#808080", ls="--",
             marker=mpl.rcParams["scatter.marker"],
             # NOTE - Do not change the value of this parameter!
-            ms=0.08 * mpl.rcParams["lines.markersize"])
+            ms=0.08 * mpl.rcParams["lines.markersize"],
+            zorder=0)
     # Disable the automatic axis scaling functionality.
     min_y, max_y = plt.ylim()
     plt.ylim(min_y, max_y)
@@ -114,7 +121,8 @@ def make_plot(filename: str, dependent_variable_matrix: np.ndarray, independent_
             dependent_variable_matrix[:, 2], c="#808080", ls="--",
             marker=mpl.rcParams["scatter.marker"],
             # NOTE - Do not change the value of this parameter!
-            ms=0.08 * mpl.rcParams["lines.markersize"])
+            ms=0.08 * mpl.rcParams["lines.markersize"],
+            zorder=0)
     # Set the primary axis labels.
     ax.set_xlabel(r"\textbf{X} (\si{\meter)")
     ax.set_ylabel(r"\textbf{Y} (\si{\meter)")
@@ -139,93 +147,108 @@ def make_plot(filename: str, dependent_variable_matrix: np.ndarray, independent_
 
 
 def objective(dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray,
-              model_weights: np.ndarray) -> float:
+              weight_matrix: np.ndarray) -> float:
     """
     Evaluates the objective function of the underlying optimization problem.
 
-    :param dependent_variable_matrix:
-        The dependent variable matrix of the regression model (i.e., position).
-    :param independent_variable_matrix:
-        The independent variable matrix of the regression model (i.e., time).
-    :param model_weights:
-        The weight matrix of the regression model.
-    :return:
+    Args:
+        dependent_variable_matrix:
+            The dependent variable matrix of the regression model.
+        independent_variable_matrix:
+            The dependent variable matrix of the regression model.
+        weight_matrix:
+            The weight matrix of the regression model.
+
+    Returns:
         The value of the objective function.
     """
     # noinspection PyTypeChecker
-    return np.sum((dependent_variable_matrix - independent_variable_matrix @ model_weights) ** 2)
+    return np.sum((dependent_variable_matrix - independent_variable_matrix @ weight_matrix) ** 2)
 
 
 def objective_gradient(dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray,
-                       model_weights: np.ndarray) -> np.ndarray:
+                       weight_matrix: np.ndarray) -> np.ndarray:
     """
     Evaluates the gradient of the objective function of the underlying optimization problem.
 
-    :param dependent_variable_matrix:
-        The dependent variable matrix. (i.e., the observations)
-    :param independent_variable_matrix:
-        The independent variable matrix of the regression model (i.e., time).
-    :param model_weights:
-        The model weight matrix of the regression model.
-    :return:
+    Args:
+        dependent_variable_matrix:
+            The dependent variable matrix of the regression model.
+        independent_variable_matrix:
+            The independent variable matrix of the regression model.
+        weight_matrix:
+            The weight matrix of the regression model.
+
+    Returns:
         The gradient of the objective function.
     """
-    return 2 * independent_variable_matrix.T @ (independent_variable_matrix @ model_weights - dependent_variable_matrix)
+    return 2 * independent_variable_matrix.T @ (independent_variable_matrix @ weight_matrix - dependent_variable_matrix)
 
 
 def gradient_descent(gradient, dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray,
-                     model_weights: np.ndarray, learning_rate=1e-5, max_num_iterations=1e+10, step_eps=1e-15) -> None:
+                     weight_matrix: np.ndarray, learning_rate: float = 1e-5, iter_eps: float = 1e+10,
+                     step_eps: float = 1e-15) -> None:
     """
-    Implementation of the gradient descent algorithm.
+    Estimates the optimal weight matrix of the regression model by solving the underlying optimization problem.
 
-    :param gradient:
-        Function that returns the gradient of the objective function with respect to the model weights.
-    :param dependent_variable_matrix:
-        The dependent variable matrix. (i.e., the observations)
-    :param independent_variable_matrix:
-        The independent variable matrix (i.e., time)
-    :param model_weights:
-        The weight matrix of the regression model.
-    :param learning_rate:
-        The step size of each update in the gradient descent algorithm.
-    :param max_num_iterations:
-        The maximum number of iterations or updates allowed in the gradient descent algorithm.
-    :param step_eps:
-        The minimum value of the absolute step in the gradient descent algorithm.
+    Args:
+        gradient:
+            The gradient of the objective function of the problem.
+        dependent_variable_matrix:
+            The dependent variable matrix of the regression model.
+        independent_variable_matrix:
+            The independent variable matrix of the regression model.
+        weight_matrix:
+            The weight matrix of the regression model.
+        learning_rate:
+            The learning rate.
+        iter_eps:
+            The maximum allowed number of iterations.
+        step_eps:
+            The minimum allowed iteration step.
+
+    Note:
+        This function modifies the weight matrix of the regression model!
     """
-    for _ in range(int(max_num_iterations)):
-        step = learning_rate * gradient(dependent_variable_matrix, independent_variable_matrix, model_weights)
+    for _ in range(int(iter_eps)):
+        step = learning_rate * gradient(dependent_variable_matrix, independent_variable_matrix, weight_matrix)
         if np.amax(np.abs(step)) < step_eps:
             break
-        model_weights -= step
+        weight_matrix -= step
 
 
-# Dependent Variable Matrix
-X = np.array(
-    [[+2.00, +0.00, +1.00], [+1.08, +1.68, +2.38], [-0.83, +1.82, +2.49], [-1.97, +0.28, +2.15], [-1.31, -1.51, +2.59],
-     [+0.57, -1.91, +4.32]])
+def main():
+    # Dependent Variable Matrix
+    X = np.array(
+        [[+2.00, +0.00, +1.00], [+1.08, +1.68, +2.38], [-0.83, +1.82, +2.49], [-1.97, +0.28, +2.15],
+         [-1.31, -1.51, +2.59],
+         [+0.57, -1.91, +4.32]])
 
-# Linear Model
-T1 = build_independent_variable_matrix(X, 1)
-W1 = build_model_weights(X, 1)
+    # Linear Model - Constant Speed
+    T1 = build_independent_variable_matrix(X, 1)
+    W1 = build_weight_matrix(X, 1)
 
-make_plot("observedQuadcopterTrajectory", X, build_independent_variable_matrix(X, 1))
+    plot_model("observedQuadcopterTrajectory", X, build_independent_variable_matrix(X, 1))
 
-gradient_descent(objective_gradient, X, T1, W1)
-print("Optimal Model Weights for Linear Model:\n", W1)
-print("Residual Error for Linear Model:\n", objective(X, T1, W1))
+    gradient_descent(objective_gradient, X, T1, W1)
+    print("Linear Model - Optimal Model Weights:\n", W1)
+    print("Linear Model - Residual Error:\n", objective(X, T1, W1))
 
-print('Speed:\n', np.linalg.norm(W1[0, :]))
+    print('Linear Model - Speed:\n', np.linalg.norm(W1[1, :]))
 
-# Square Model
-T2 = build_independent_variable_matrix(X, 2)
-W2 = build_model_weights(X, 2)
+    # Quadratic Model - Constant Acceleration
+    T2 = build_independent_variable_matrix(X, 2)
+    W2 = build_weight_matrix(X, 2)
 
-gradient_descent(objective_gradient, X, T2, W2)
-print("Optimal Model Weights for Square Model:\n", W2)
-print("Residual Error for Square Model:\n", objective(X, T2, W2))
+    gradient_descent(objective_gradient, X, T2, W2)
+    print("Quadratic Model - Optimal Model Weights:\n", W2)
+    print("Quadratic Model - Residual Error:\n", objective(X, T2, W2))
 
-next_timestep = np.array([1, 7, 49])
-print('Next Position:\n', next_timestep @ W2)
+    next_timestep = np.array([1, 7, 49])
+    print('Quadratic Model - Next Position:\n', next_timestep @ W2)
 
-make_plot("estimatedQuadcopterTrajectory", np.vstack((T2, next_timestep)) @ W2, np.vstack((T2, next_timestep)))
+    plot_model("estimatedQuadcopterTrajectory", np.vstack((T2, next_timestep)) @ W2, np.vstack((T2, next_timestep)))
+
+
+if __name__ == '__main__':
+    main()

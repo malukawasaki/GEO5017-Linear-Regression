@@ -1,32 +1,40 @@
-# GEO5017-Linear-Regression
+# Description
 
-## Project description
+This is the source code developed for the first assignment of the course: "Macchine Learning for the Built Environment",
+at Delft University of Technology, The Netherlands. This program solves the programming-related, linear regression
+excesses proposed in the description of the assignment. In brief, these exercices revolve around the modeling of the
+trajectory of a quadrocopter in 3D space.
 
-This project was developed as a solution for the assignment 1 in the Machine Learning course GEO5017 lectured at TU Delft.
-The main aim of this program is to solve linear regression exercises proposed in the assignment, which is in short to create a regression model with a 3D plot of the observed trajectory of a quadcopter over time.
+# Requirements
 
-## Dependencies.
+This program relies on Matplotlib and Numpy, both of which can be installed as such:
 
-To run the script, the user needs to have numpy, matplotlib, and math installed. Install by:
+```batch
+pip install -r requirements.txt
+```
 
-`pip install -r requirements.txt`
+Note that the program uses a custom plotting style, and thus the installed Matplotlib version ***must*** be compatible
+with
+c.3.7.1. In case encounter any graphics-related problems while executing the program, please comment out all code
+interacting with the matplotlib.rcParams dictionary and add restore the internal plotting configuration by including the
+following command before the various function definitions:
 
-## How to use this code
+```python
+matplotlib.rcParams.update(matplotlib.rcParamsDefault)
+```
 
-The script has several functions:
+# Usage
 
-`build_independent_variable_matrix`: Constructs the independent variable matrix of the regression model based on its desired order.
+The program can be executed as such:
 
-`build_model_weights`: Constructs an initial weight matrix of the regression model based on its desired order.
+```batch
+python main.py
+```
 
-`make_plot`: Creates a 3D plot of the data represented by the dependent and independent variable matrices and save it to a file.
+# Authors
 
-In addition to these functions, the script also sets various parameters for the matplotlib plotting environment, including the plotting style, paper size, font size, marker size, and line width. The mpl.rcParams dictionary is used to set these parameters.
+Group 9
 
-In case the user has problems with these parameters, a line in the script can be uncommented to set parameters back to default:
-
-`mpl.rcParams.update(mpl.rcParamsDefault)`
-
-Run this code using:
-
-`python main.py`
+- Dennis Lagendijk
+- Dimitrios Mantas
+- Maria Luisa Tarozzo Kawasaki
