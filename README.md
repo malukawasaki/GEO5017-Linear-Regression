@@ -1,8 +1,8 @@
 # Description
 
-This is the source code developed for the first assignment of the course: "Macchine Learning for the Built Environment",
+This is the source code developed for the first assignment of the course: "Machine Learning for the Built Environment",
 at Delft University of Technology, The Netherlands. This program solves the programming-related, linear regression
-exercices proposed in the description of the assignment. In brief, these exercices revolve around the modeling of the
+exercises proposed in the description of the assignment. In brief, these exercises revolve around the modeling of the
 trajectory of a quadrocopter in 3D space.
 
 # Requirements

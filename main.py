@@ -8,42 +8,54 @@ import numpy as np
 mpl.rcdefaults()
 
 # Specify the plotting style.
-mpl.rcParams["figure.constrained_layout.use"] = True
+# Figure Settings
+# DPI
 mpl.rcParams["figure.dpi"] = 600
-# Specify the paper size.
-paper_size = [21.0,  # W
-              29.7,  # H
-              ]
-# Specify the left and right margins.
-x_margins = [02.5,  # L
-             02.5,  # R
-             ]
-p_width = (paper_size[0] - x_margins[0] - x_margins[1]) / 2.54
-mpl.rcParams["figure.figsize"] = [p_width, p_width * paper_size[0] / paper_size[1]]
-mpl.rcParams["figure.labelsize"] = 10
-mpl.rcParams["figure.titlesize"] = 12
-mpl.rcParams["font.size"] = 10
-mpl.rcParams["legend.edgecolor"] = "#BFBFBF"
-mpl.rcParams["grid.color"] = "#BFBFBF"
-mpl.rcParams["legend.fancybox"] = False
-mpl.rcParams["legend.fontsize"] = 8
-mpl.rcParams["lines.markersize"] = (0.5 * (mpl.rcParams["figure.dpi"] / 25.4)) ** 2  # d=1 mm
-mpl.rcParams["savefig.transparent"] = True
-mpl.rcParams["lines.linewidth"] = 0.1 * math.sqrt(mpl.rcParams["lines.markersize"])
+# Layout
+# mpl.rcParams["figure.constrained_layout.use"]: True
+# Size Constraints
+# Paper Size
+paper_size = [21.0,  # W (cm)
+              29.7]  # H (cm)
+# Margins
+plr_margins = [2.5,  # L (cm)
+               2.5]  # R (cm)
+# Width
+graph_width = (paper_size[0] - plr_margins[0] - plr_margins[1]) / 2.54
+# Size
+mpl.rcParams["figure.figsize"] = [graph_width, graph_width *
+                                  # Paper Aspect Ratio
+                                  paper_size[0] / paper_size[1]]
+# Marker
 mpl.rcParams["scatter.marker"] = "."
-# Computer Modern Serif
-mpl.rcParams["font.family"] = "serif"
-mpl.rcParams[
-    "text.latex.preamble"] = r"\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage{amsmath, amssymb, siunitx, upgreek}"
+# Marker Radius
+# 0.3 mm
+mpl.rcParams["lines.markersize"] = (0.3 * (mpl.rcParams["figure.dpi"] / 25.4)) ** 2
+# Line Width
+# 0.1 mm
+mpl.rcParams["lines.linewidth"] = 0.1 * math.sqrt(mpl.rcParams["lines.markersize"])
+# LaTeX Compiler Settings
 mpl.rcParams["text.usetex"] = True
+# Font
+mpl.rcParams["font.family"] = "Computer Modern Roman"
+# Font Size
+# Global
+mpl.rcParams["font.size"] = 10
+# Titles
+mpl.rcParams["axes.titlesize"] = 10
+# Label Ticks
 mpl.rcParams["xtick.labelsize"] = 8
 mpl.rcParams["ytick.labelsize"] = 8
-mpl.rcParams['axes3d.xaxis.panecolor'] = "#FFFFFF"
-mpl.rcParams['axes3d.yaxis.panecolor'] = "#FFFFFF"
-mpl.rcParams['axes3d.zaxis.panecolor'] = "#FFFFFF"
+# Preamble
+mpl.rcParams["text.latex.preamble"] = "\\usepackage{siunitx}"
+# Writer Settings
+# Whitespace
+mpl.rcParams["savefig.bbox"] = "tight"
+# Alpha Channel
+mpl.rcParams["savefig.transparent"] = True
 
 
-# If running into problems using matplotlib latex just uncomment this line:
+# Enable this command if you encounter any graphics-related issues.
 # mpl.rcParams.update(mpl.rcParamsDefault)
 
 
@@ -82,6 +94,23 @@ def build_weight_matrix(dependent_variable_matrix: np.ndarray, model_order: int)
     return np.ones((model_order + 1, dependent_variable_matrix.shape[1]))
 
 
+def subplot(ax, dependent_variable_matrix, independent_variable_matrix):
+    # Scatter the observed positions.
+    p = ax.scatter(dependent_variable_matrix[:, 0], dependent_variable_matrix[:, 1], dependent_variable_matrix[:, 2],
+                   alpha=1, c=list(range(1, len(dependent_variable_matrix) + 1)),
+                   cmap=plt.get_cmap('viridis', len(independent_variable_matrix)),
+                   # This parameter is required when using Axes3D.
+                   s=mpl.rcParams["lines.markersize"])
+    # Plot the observed trajectory.
+    ax.plot(dependent_variable_matrix[:, 0], dependent_variable_matrix[:, 1], dependent_variable_matrix[:, 2],
+            c="#000000")
+    # Set the primary axis labels.
+    ax.set_xlabel(r"\textbf{X} (\si{\meter)")
+    ax.set_ylabel(r"\textbf{Y} (\si{\meter)")
+    ax.set_zlabel(r"\textbf{Z} (\si{\meter)")
+    return p
+
+
 def plot_model(filename: str, dependent_variable_matrix: np.ndarray, independent_variable_matrix: np.ndarray) -> None:
     """
     Generates a plot of the regression model and saves the corresponding figure to disk.
@@ -94,41 +123,23 @@ def plot_model(filename: str, dependent_variable_matrix: np.ndarray, independent
         independent_variable_matrix:
             The independent variable matrix of the model.
     """
-    # Visualize the observed trajectory of the quadrocopter over time.
-    ax = plt.figure().add_subplot(projection='3d')
-    # Set the camera a front isometric view.
-    ax.view_init(elev=math.degrees(math.asin(1 / math.sqrt(3))), azim=-45)
-    # Scatter the observed positions.
-    p = ax.scatter(dependent_variable_matrix[:, 0], dependent_variable_matrix[:, 1], dependent_variable_matrix[:, 2],
-                   alpha=1, c=list(range(1, len(dependent_variable_matrix) + 1)),
-                   cmap=plt.get_cmap('viridis', len(independent_variable_matrix)),
-                   # This parameter is required when using Axes3D.
-                   s=mpl.rcParams["lines.markersize"])
-    # Plot the observed trajectory.
-    ax.plot(dependent_variable_matrix[:, 0], dependent_variable_matrix[:, 1], dependent_variable_matrix[:, 2],
-            c="#404040")
-    # Project the trajectory to the X-Y plane.
-    ax.plot(dependent_variable_matrix[:, 0], dependent_variable_matrix[:, 1], c="#808080", ls="--",
-            marker=mpl.rcParams["scatter.marker"],
-            # NOTE - Do not change the value of this parameter!
-            ms=0.08 * mpl.rcParams["lines.markersize"],
-            zorder=0)
-    # Disable the automatic axis scaling functionality.
-    min_y, max_y = plt.ylim()
-    plt.ylim(min_y, max_y)
-    # Project the trajectory to the X-Z plane.
-    ax.plot(dependent_variable_matrix[:, 0], np.full_like(dependent_variable_matrix[:, 0], max_y),
-            dependent_variable_matrix[:, 2], c="#808080", ls="--",
-            marker=mpl.rcParams["scatter.marker"],
-            # NOTE - Do not change the value of this parameter!
-            ms=0.08 * mpl.rcParams["lines.markersize"],
-            zorder=0)
-    # Set the primary axis labels.
-    ax.set_xlabel(r"\textbf{X} (\si{\meter)")
-    ax.set_ylabel(r"\textbf{Y} (\si{\meter)")
-    ax.set_zlabel(r"\textbf{Z} (\si{\meter)")
-    # Add a color bar to display time information.
-    cb = plt.colorbar(p, label=r"\textbf{Time} (\si{\second)",
+    # Visualize the observed trajectory of the quadrocopter.
+    # Create a 2x2 array of 3D subplots.
+    fig, axs = plt.subplots(2, 2, subplot_kw={'projection': '3d'})
+    # Specify the padding.
+    # NOTE - Do not change the value of this parameter!
+    plt.subplots_adjust(wspace=0.5, hspace=0.5)
+    # Generate each subplot.
+    for ax, i in zip(axs.flat, [0, 1, 2, 3]):
+        # Set the camera to an isometric view.
+        ax.view_init(azim=45 + i * 90, elev=math.degrees(math.asin(1 / math.sqrt(3))))
+        # ax.set_box_aspect(aspect=None, zoom=0.9)
+
+        sp = subplot(ax, dependent_variable_matrix, independent_variable_matrix)
+        # Add a label specifying the azimuth of the camera.
+        ax.set_title(r"$\alpha = {}$".format(45 + i * 90) + r"\si{\degree}")
+    # Add a common color bar to display time information.
+    cb = plt.colorbar(sp, ax=axs.flat, label=r"\textbf{Time} (\si{\second)",
                       # NOTE - Do not change the value of this parameter!
                       pad=0.2,
                       # NOTE - Do not change the value of this parameter!
@@ -138,10 +149,6 @@ def plot_model(filename: str, dependent_variable_matrix: np.ndarray, independent
     cb.ax.set_yticklabels(list(range(1, len(independent_variable_matrix) + 1)))
     # Hide the vertical axis ticks.
     cb.ax.axes.tick_params(length=0)
-    # Add a legend.
-    plt.legend(["Position", "3D Trajectory", "2D Trajectory"],
-               # NOTE - Do not change the value of this parameter!
-               bbox_to_anchor=(0.5, -0.2), loc="lower center", ncol=3)
 
     plt.savefig(filename)
 
